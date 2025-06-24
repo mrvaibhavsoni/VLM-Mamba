@@ -8,7 +8,7 @@ Author: Kye Gomez
 License: MIT
 """
 
-from .model import (
+from vlm_mamba.model import (
     VLMamba,
     VLMambaConfig,
     VisionConfig,

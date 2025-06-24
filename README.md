@@ -1,6 +1,5 @@
 # VLM-Mamba: The First State Space Model-Based Vision-Language Model
 
-[![arXiv](https://img.shields.io/badge/arXiv-2401.00000-b31b1b.svg)](https://arxiv.org/abs/2401.00000)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
@@ -8,11 +7,56 @@
 > **VLM-Mamba: Pioneering State Space Models for Vision-Language Understanding**  
 > *The first-ever Vision-Language Model (VLM) built entirely on State Space Models (SSMs), eliminating the need for attention mechanisms while maintaining competitive performance.*
 
-## 📋 Abstract
+## Abstract
 
 We introduce **VLM-Mamba**, the first Vision-Language Model built entirely on State Space Models (SSMs), specifically leveraging the Mamba architecture. Unlike traditional VLMs that rely on Transformer-based attention mechanisms, VLM-Mamba demonstrates that SSMs can effectively handle both visual and linguistic modalities through a novel multi-modal architecture. Our approach achieves comparable performance to attention-based VLMs while offering significant computational advantages in terms of memory efficiency and inference speed.
 
-## 🏗️ Architecture Overview
+## Model Architecture
+
+```mermaid
+graph TB
+    subgraph "Input Processing"
+        A[Image Input] --> B[VisionMamba Encoder]
+        A --> C[Fuyu Image Processor]
+        D[Text Tokens] --> E[Token Embeddings]
+    end
+    
+    subgraph "Vision Processing Module"
+        B --> F[Patch Embeddings]
+        F --> G[Mamba SSM Layers]
+        G --> H[Vision Features]
+        C --> I[Resampled Features]
+    end
+    
+    subgraph "Language Processing Module"
+        E --> J[LanguageMamba]
+        J --> K[Mamba SSM Layers]
+        K --> L[Language Features]
+    end
+    
+    subgraph "Multi-Modal Bridge"
+        H --> M[BridgerFFN]
+        I --> M
+        L --> M
+        M --> N[Cross-Modal Fusion]
+    end
+    
+    subgraph "Output"
+        N --> O[Vision-Language Output]
+    end
+    
+    subgraph "Optional LoRA"
+        P[LoRA Adapters] --> G
+        P --> K
+    end
+    
+    style A fill:#e1f5fe
+    style D fill:#e1f5fe
+    style O fill:#c8e6c9
+    style P fill:#fff3e0
+```
+
+## Architecture Overview
 
 VLM-Mamba consists of three core components:
 
@@ -30,7 +74,7 @@ VLM-Mamba consists of three core components:
 - **BridgerFFN**: A feed-forward network that aligns visual and linguistic representations
 - **Cross-Modal Fusion**: Effective combination of vision and language features for downstream tasks
 
-## 🚀 Key Innovations
+## Key Innovations
 
 ### Novel Contributions
 1. **First SSM-based VLM**: Eliminates attention mechanisms entirely from vision-language modeling
@@ -44,7 +88,7 @@ VLM-Mamba consists of three core components:
 - **Modularity**: Configurable components for different use cases and computational budgets
 - **Type Safety**: Comprehensive Pydantic-based configuration system
 
-## 📦 Installation
+## Installation
 
 ```bash
 # Clone the repository
@@ -64,7 +108,7 @@ pip install mamba-ssm
 - mamba-ssm
 - Additional dependencies: `torchvision`, `loguru`, `einops`, `pydantic`
 
-## 🔧 Usage
+## Usage
 
 ### Basic Usage
 
@@ -119,7 +163,7 @@ model = VLMamba(config)
 # Only LoRA parameters will be trainable
 ```
 
-## 📊 Model Specifications
+## Model Specifications
 
 | Component | Configuration | Parameters |
 |-----------|---------------|------------|
@@ -130,7 +174,7 @@ model = VLMamba(config)
 
 *Note: Parameter counts vary based on configuration. LoRA adds minimal trainable parameters.*
 
-## 🧪 Experimental Results
+## Experimental Results
 
 ### Performance Comparison
 - **Memory Usage**: 40% reduction compared to equivalent Transformer-based VLM
@@ -142,7 +186,7 @@ model = VLMamba(config)
 - **Visual Question Answering**: Strong results on VQA v2.0
 - **Cross-Modal Retrieval**: Effective image-text matching
 
-## 📚 Citation
+## Citation
 
 If you find this work useful, please cite our paper:
 
@@ -155,14 +199,14 @@ If you find this work useful, please cite our paper:
 }
 ```
 
-## 🔬 Research Impact
+## Research Impact
 
 This work represents a significant step toward:
 1. **Efficient Multi-Modal AI**: Demonstrating SSMs' capability in vision-language tasks
 2. **Attention-Free Architectures**: Proving that attention mechanisms aren't necessary for VLM performance
 3. **Scalable AI Systems**: Enabling longer context windows and more efficient training
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
@@ -179,22 +223,21 @@ black .
 ruff . --fix
 ```
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Mamba: Linear-Time Sequence Modeling with Selective State Spaces](https://arxiv.org/abs/2312.00752) - The foundational SSM architecture
 - [Fuyu: A Multimodal Model for Computer Agents](https://arxiv.org/abs/2311.16542) - Inspiration for lightweight vision processing
 - The open-source AI community for continuous innovation
 
-## 📞 Contact
+## Contact
 
 - **Author**: Kye Gomez
 - **Email**: kye@apac.ai
 - **GitHub**: [@kyegomez](https://github.com/kyegomez)
-- **Paper**: [arXiv:2401.00000](https://arxiv.org/abs/2401.00000)
 
 ---
 
