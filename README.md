@@ -50,10 +50,6 @@ graph TB
         P --> K
     end
     
-    style A fill:#e1f5fe
-    style D fill:#e1f5fe
-    style O fill:#c8e6c9
-    style P fill:#fff3e0
 ```
 
 ## Architecture Overview
