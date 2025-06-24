@@ -1,2 +1,5 @@
 torch
 mamba-ssm
+pydantic
+loguru
+einops
