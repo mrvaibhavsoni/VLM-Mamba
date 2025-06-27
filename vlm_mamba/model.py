@@ -250,21 +250,30 @@ class VisionMamba(nn.Module):
     ):
         super().__init__()
         if Mamba is None:
-            raise RuntimeError("Mamba SSM package is required.")
+            logger.warning("Mamba SSM package not found. VisionMamba will not be functional.")
+            self.mamba_available = False
+            self.patch_embed = None
+            self.pos_embed = None
+            self.layers = None
+            self.norm = None
+        else:
+            self.mamba_available = True
+            self.img_size = img_size
+            self.patch_size = patch_size
+            self.num_patches = (img_size // patch_size) ** 2
 
-        self.img_size = img_size
-        self.patch_size = patch_size
-        self.num_patches = (img_size // patch_size) ** 2
-
-        self.patch_embed = nn.Conv2d(
-            in_chans, d_model, kernel_size=patch_size, stride=patch_size
-        )
-        self.pos_embed = nn.Parameter(torch.randn(1, self.num_patches, d_model))
-        self.layers = nn.ModuleList([Mamba(d_model=d_model) for _ in range(n_layers)])
-        self.norm = nn.LayerNorm(d_model)
-        logger.info(f"Initialized VisionMamba Encoder with {n_layers} layers.")
+            self.patch_embed = nn.Conv2d(
+                in_chans, d_model, kernel_size=patch_size, stride=patch_size
+            )
+            self.pos_embed = nn.Parameter(torch.randn(1, self.num_patches, d_model))
+            self.layers = nn.ModuleList([Mamba(d_model=d_model) for _ in range(n_layers)])
+            self.norm = nn.LayerNorm(d_model)
+            logger.info(f"Initialized VisionMamba Encoder with {n_layers} layers.")
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if not self.mamba_available:
+            raise RuntimeError("VisionMamba is not functional because Mamba SSM package was not found during initialization.")
+
         B, C, H, W = x.shape
         if not (H == self.img_size and W == self.img_size):
             raise ValueError(
@@ -307,19 +316,33 @@ class LanguageMamba(nn.Module):
     def __init__(self, vocab_size: int = 50257, d_model: int = 768, n_layers: int = 12):
         super().__init__()
         if Mamba is None:
-            raise RuntimeError("Mamba SSM package is required.")
-
-        self.d_model = d_model
-        self.embedding = nn.Embedding(vocab_size, d_model)
-        self.layers = nn.ModuleList([Mamba(d_model=d_model) for _ in range(n_layers)])
-        self.norm = nn.LayerNorm(d_model)
-        self.lm_head = nn.Linear(d_model, vocab_size, bias=False)
-        self.lm_head.weight = self.embedding.weight
-        logger.info(f"Initialized LanguageMamba with {n_layers} layers.")
+            logger.warning("Mamba SSM package not found. LanguageMamba will not be functional.")
+            self.mamba_available = False
+            self.d_model = d_model
+            self.embedding = None
+            self.layers = None
+            self.norm = None
+            self.lm_head = None
+        else:
+            self.mamba_available = True
+            self.d_model = d_model
+            self.embedding = nn.Embedding(vocab_size, d_model)
+            self.layers = nn.ModuleList([Mamba(d_model=d_model) for _ in range(n_layers)])
+            self.norm = nn.LayerNorm(d_model)
+            self.lm_head = nn.Linear(d_model, vocab_size, bias=False)
+            self.lm_head.weight = self.embedding.weight
+            logger.info(f"Initialized LanguageMamba with {n_layers} layers.")
 
     def forward(self, input_ids: torch.Tensor) -> torch.Tensor:
+        if not self.mamba_available:
+            raise RuntimeError("LanguageMamba is not functional because Mamba SSM package was not found during initialization.")
+
         x = self.embedding(input_ids) * (self.d_model**0.5)
-        return x
+        for layer in self.layers:
+            x = layer(x)
+        x = self.norm(x)
+
+        return self.lm_head(x)
 
 
 # --- Main VLM Class ---
@@ -370,7 +393,7 @@ class VLMamba(nn.Module):
 
         for name, module in self.named_modules():
             # Target the 'in_proj' and 'x_proj' layers within Mamba blocks
-            if isinstance(module, Mamba):
+            if Mamba is not None and isinstance(module, Mamba):
                 logger.debug(f"Applying LoRA to Mamba block: {name}")
                 module.in_proj = LoRALinear(module.in_proj, rank, alpha)
 
